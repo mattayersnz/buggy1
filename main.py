@@ -1,138 +1,82 @@
-import random
-from time import sleep
+"""
+Curious Creature - Autonomous Buggy Controller
 
+Makes the Raspberry Pi Pico buggy behave like a curious, living creature
+that roams within a 1-meter square area with dynamic moods and lifelike behaviors.
+"""
+
+import time
+import sys
+
+# Import Kitronik library
+sys.path.append("Kitronik-Pico-Autonomous-Robotics-Platform-MicroPython")
 import PicoAutonomousRobotics
 
-# Initialize the robot
-robot = PicoAutonomousRobotics.KitronikPicoRobotBuggy()
-
-# Configuration constants
-FORWARD_SPEED = 25  # Speed for forward movement (0-100) 25 is the lowest speed
-TURN_SPEED = 20  # Speed for turning (0-100)
-OBSTACLE_DISTANCE = 15  # Distance in cm to trigger obstacle avoidance
-
-# Timing calibration (adjust these based on your robot's actual performance)
-# Time to complete 4 wheel rotations at FORWARD_SPEED
-TIME_FOR_4_ROTATIONS = 2.0  # seconds (you may need to adjust this)
-# Time to turn 90 degrees at TURN_SPEED
-TIME_FOR_90_DEGREE_TURN = 5.0  # seconds (you may need to adjust this)
-
-
-def check_obstacle():
-    """Check if there's an obstacle within OBSTACLE_DISTANCE cm"""
-    distance = robot.getDistance("f")  # Get distance from front ultrasonic sensor
-    if distance == -1:  # Sensor timeout or not fitted
-        return False
-    return distance < OBSTACLE_DISTANCE
-
-
-def move_forward_4_rotations():
-    """Move forward for 4 wheel rotations"""
-    # Turn on both motors forward
-    robot.motorOn("l", "f", FORWARD_SPEED)
-    robot.motorOn("r", "f", FORWARD_SPEED)
-
-    # Move for the calculated time
-    sleep(TIME_FOR_4_ROTATIONS)
-
-    # Stop motors
-    robot.motorOff("l")
-    robot.motorOff("r")
-
-
-def turn_90_degrees():
-    """Turn 90 degrees left or right randomly"""
-    # Randomly choose left or right (50/50)
-    turn_direction = random.choice(["left", "right"])
-
-    if turn_direction == "left":
-        # Turn left: left motor reverse, right motor forward
-        robot.motorOn("l", "r", TURN_SPEED)
-        robot.motorOn("r", "f", TURN_SPEED)
-        # Flash left LEDs blue
-        robot.setLED(0, robot.BLUE)
-        robot.setLED(1, robot.BLUE)
-    else:
-        # Turn right: left motor forward, right motor reverse
-        robot.motorOn("l", "f", TURN_SPEED)
-        robot.motorOn("r", "r", TURN_SPEED)
-        # Flash right LEDs blue
-        robot.setLED(2, robot.BLUE)
-        robot.setLED(3, robot.BLUE)
-
-    robot.show()
-
-    # Turn for the calculated time
-    sleep(TIME_FOR_90_DEGREE_TURN)
-
-    # Stop motors
-    robot.motorOff("l")
-    robot.motorOff("r")
-
-    # Clear LEDs
-    robot.clear(0)
-    robot.clear(1)
-    robot.clear(2)
-    robot.clear(3)
-    robot.show()
-
-    # Brief pause after turn
-    sleep(0.2)
+# Import creature modules
+from creature_position import PositionTracker
+from creature_mood import MoodManager, Mood
+from creature_behavior import BehaviorController
 
 
 def main():
-    """Main robot control loop"""
-    print("Robot starting...")
-    robot.beepHorn()  # Signal start
+    """Main creature control loop."""
+    print("Creature awakening...")
 
-    # Set LEDs to green to show robot is running
-    for i in range(4):
-        robot.setLED(i, robot.GREEN)
-    robot.show()
+    # Initialize subsystems
+    robot = PicoAutonomousRobotics.KitronikPicoRobotBuggy()
+    position_tracker = PositionTracker()
+    mood_manager = MoodManager(start_mood=Mood.CURIOUS)
+    behavior = BehaviorController(robot, position_tracker)
 
-    sleep(1)  # Give a second before starting
+    # Startup animation (creature "wakes up")
+    behavior.startup_animation()
+    time.sleep(1)
+
+    print("Creature is alive!")
+    print(f"Starting position: {position_tracker.current_position}")
 
     try:
         while True:
-            # Check for obstacles before moving
-            if check_obstacle():
-                print("Obstacle detected!")
-                # Set LEDs to red
-                for i in range(4):
-                    robot.setLED(i, robot.RED)
-                robot.show()
+            # Update mood system (check for transitions)
+            current_mood_config = mood_manager.update()
 
-                # Stop and turn
-                robot.motorOff("l")
-                robot.motorOff("r")
-                sleep(0.5)
-                turn_90_degrees()
+            # Apply mood-based LED color
+            behavior.set_all_leds(current_mood_config.led_color)
 
-                # Set LEDs back to green
-                for i in range(4):
-                    robot.setLED(i, robot.GREEN)
-                robot.show()
-
-                # Continue to next iteration (will check obstacle again)
+            # Check for obstacles first
+            if behavior.check_and_handle_obstacle(current_mood_config):
+                # Object was detected and investigated
+                mood_manager.log_event("object_encounter")
                 continue
 
-            # No obstacle - execute normal movement pattern
-            print("Moving forward 4 rotations...")
-            move_forward_4_rotations()
+            # Check for boundaries
+            if behavior.check_and_handle_boundary(current_mood_config):
+                # Boundary was detected and handled
+                mood_manager.log_event("boundary_encounter")
+                continue
 
-            print("Stopping and turning...")
-            sleep(0.3)  # Brief pause
-            turn_90_degrees()
+            # Normal wandering behavior
+
+            # Random pause check
+            if mood_manager.should_pause():
+                pause_duration = mood_manager.get_pause_duration()
+                behavior.idle_observe(pause_duration, current_mood_config)
+
+            # Random turn and occasional sound
+            behavior.random_wander_decision(current_mood_config)
+
+            # Continue wandering
+            behavior.wander_step(current_mood_config)
+
+            # Small delay between decision cycles
+            time.sleep(0.1)
 
     except KeyboardInterrupt:
-        # Clean shutdown on Ctrl+C
-        print("\nStopping robot...")
-        robot.motorOff("l")
-        robot.motorOff("r")
-        for i in range(4):
-            robot.clear(i)
-        robot.show()
-        print("Robot stopped.")
+        # Graceful shutdown on Ctrl+C
+        print("\nCreature going to sleep...")
+        behavior.shutdown_sequence()
+        print("Creature is asleep.")
+        print(f"Final position: {position_tracker.current_position}")
 
 
 # Run the main program
