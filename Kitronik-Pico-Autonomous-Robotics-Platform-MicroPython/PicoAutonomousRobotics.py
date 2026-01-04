@@ -354,9 +354,15 @@ class KitronikPicoRobotBuggy:
         self.servos = []
         self._initServos()
         #connect the servos by default on construction - advanced uses can disconnect them if required.
-        for i in range(4):
-            self.registerServo(i)
-            self.goToPosition(i,90) #set the servo outputs to middle of the range.
+        try:
+            for i in range(4):
+                self.registerServo(i)
+                self.goToPosition(i,90) #set the servo outputs to middle of the range.
+        except Exception as e:
+            # Servo initialization failed - continue without servos
+            # This allows the buggy to run even if servos aren't connected
+            print(f"Warning: Servo initialization failed: {e}")
+            print("Continuing without servo support...")
         # Create  and start the StateMachine for the ZIPLeds
         for i in range(8): # StateMachine range from 0 to 7
             if usedSM[i]:

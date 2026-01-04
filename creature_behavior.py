@@ -7,7 +7,6 @@ that make the buggy feel alive and autonomous.
 
 import time
 import random
-from typing import Tuple, Optional
 from calibration_data import CalibrationData
 from creature_position import PositionTracker
 from creature_mood import MoodConfig
@@ -21,7 +20,7 @@ class BehaviorController:
     to create lifelike autonomous behavior.
     """
 
-    def __init__(self, robot, position_tracker: PositionTracker):
+    def __init__(self, robot, position_tracker):
         """
         Initialize behavior controller.
 
@@ -32,7 +31,7 @@ class BehaviorController:
         self.robot = robot
         self.position_tracker = position_tracker
 
-    def move_forward(self, distance_cm: float, speed: int) -> None:
+    def move_forward(self, distance_cm, speed):
         """
         Move forward a specified distance.
 
@@ -51,7 +50,7 @@ class BehaviorController:
         # Update position
         self.position_tracker.update_position(distance_cm)
 
-    def turn(self, angle_degrees: float, direction: str) -> None:
+    def turn(self, angle_degrees, direction):
         """
         Turn by specified angle.
 
@@ -78,7 +77,7 @@ class BehaviorController:
         # Update heading
         self.position_tracker.update_heading(angle_change)
 
-    def back_away(self, distance_cm: float) -> None:
+    def back_away(self, distance_cm):
         """
         Move backward a specified distance.
 
@@ -109,7 +108,7 @@ class BehaviorController:
         # Update position (negative distance for reverse)
         self.position_tracker.update_position(-safe_distance)
 
-    def pivot_inspect(self, angle: float = 45.0) -> None:
+    def pivot_inspect(self, angle=45.0):
         """
         Perform curious side-to-side inspection pivot.
 
@@ -122,7 +121,7 @@ class BehaviorController:
         time.sleep(0.3)
         self.turn(angle / 2.0, "left")  # Return to approximate center
 
-    def wander_step(self, mood_config: MoodConfig) -> None:
+    def wander_step(self, mood_config):
         """
         Take a random wander step based on mood.
 
@@ -139,7 +138,7 @@ class BehaviorController:
 
         self.move_forward(distance, speed)
 
-    def idle_observe(self, duration: float, mood_config: MoodConfig) -> None:
+    def idle_observe(self, duration, mood_config):
         """
         Stop and observe with LED breathing effect.
 
@@ -179,7 +178,7 @@ class BehaviorController:
         self.robot.setBrightness(20)
         self.robot.show()
 
-    def play_curious_sound(self, mood_config: MoodConfig) -> None:
+    def play_curious_sound(self, mood_config):
         """
         Play mood-appropriate sound sequence.
 
@@ -198,9 +197,9 @@ class BehaviorController:
             self.robot.silence()
             time.sleep(pattern.beep_gap)
 
-    def investigate_object(self, initial_distance: float, mood_config: MoodConfig) -> None:
+    def investigate_object(self, initial_distance, mood_config):
         """
-        Full investigation sequence: approach, observe, vocalize, retreat, navigate.
+        Full investigation sequence, navigate.
 
         Args:
             initial_distance: Initial distance to object in centimeters
@@ -234,7 +233,7 @@ class BehaviorController:
         if self.position_tracker.is_movement_safe(20.0):
             self.wander_step(mood_config)
 
-    def execute_boundary_response(self, mood_config: MoodConfig) -> None:
+    def execute_boundary_response(self, mood_config):
         """
         Respond to boundary detection with cautious behavior.
 
@@ -273,7 +272,7 @@ class BehaviorController:
         # Restore mood-based LED color
         self.set_all_leds(mood_config.led_color)
 
-    def set_all_leds(self, color: Tuple[int, int, int]) -> None:
+    def set_all_leds(self, color):
         """
         Set all LEDs to the same color.
 
@@ -284,7 +283,7 @@ class BehaviorController:
             self.robot.setLED(led, color)
         self.robot.show()
 
-    def startup_animation(self) -> None:
+    def startup_animation(self):
         """Play startup animation when creature 'wakes up'."""
         # Rainbow sequence
         colors = [
@@ -305,10 +304,11 @@ class BehaviorController:
         self.robot.beepHorn()
 
         # Set to initial mood color (will be set by mood manager)
-        self.robot.clear()
+        for led in range(4):
+            self.robot.clear(led)
         self.robot.show()
 
-    def shutdown_sequence(self) -> None:
+    def shutdown_sequence(self):
         """Graceful shutdown when creature 'goes to sleep'."""
         # Stop motors
         self.robot.motorOff("l")
@@ -321,11 +321,12 @@ class BehaviorController:
             time.sleep(0.05)
 
         # Clear LEDs
-        self.robot.clear()
+        for led in range(4):
+            self.robot.clear(led)
         self.robot.show()
         self.robot.silence()
 
-    def random_wander_decision(self, mood_config: MoodConfig) -> None:
+    def random_wander_decision(self, mood_config):
         """
         Make random wandering decisions based on mood.
 
@@ -342,7 +343,7 @@ class BehaviorController:
             if random.random() < 0.3:
                 self.play_curious_sound(mood_config)
 
-    def check_and_handle_obstacle(self, mood_config: MoodConfig) -> bool:
+    def check_and_handle_obstacle(self, mood_config):
         """
         Check for obstacles and handle if detected.
 
@@ -361,7 +362,7 @@ class BehaviorController:
 
         return False
 
-    def check_and_handle_boundary(self, mood_config: MoodConfig) -> bool:
+    def check_and_handle_boundary(self, mood_config):
         """
         Check for boundaries and handle if near edge.
 

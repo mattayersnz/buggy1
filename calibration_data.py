@@ -5,7 +5,6 @@ This module contains hardware-specific calibration values for
 accurate position tracking using time-based dead reckoning.
 """
 
-from typing import Dict, Tuple
 
 class CalibrationData:
     """Calibration constants for movement and positioning."""
@@ -30,7 +29,7 @@ class CalibrationData:
 
     # Speed-to-distance mapping (cm per second at various speeds)
     # Linear interpolation used for speeds not in this table
-    SPEED_TO_CM_PER_SECOND: Dict[int, float] = {
+    SPEED_TO_CM_PER_SECOND = {
         15: 12.0,   # Minimum recommended speed
         20: 16.0,
         25: 20.0,   # FORWARD_SPEED
@@ -61,7 +60,7 @@ class CalibrationData:
     MIN_SAFE_REAR_DISTANCE: float = 3.0  # cm - safety buffer when reversing
 
     @staticmethod
-    def get_cm_per_second(speed: int) -> float:
+    def get_cm_per_second(speed):
         """
         Get estimated distance traveled per second at given speed.
 
@@ -101,7 +100,7 @@ class CalibrationData:
         return CalibrationData.DISTANCE_PER_SECOND_AT_FORWARD_SPEED
 
     @staticmethod
-    def calculate_movement_time(distance_cm: float, speed: int) -> float:
+    def calculate_movement_time(distance_cm, speed):
         """
         Calculate time needed to travel a given distance at given speed.
 
@@ -118,7 +117,7 @@ class CalibrationData:
         return distance_cm / cm_per_second
 
     @staticmethod
-    def calculate_turn_time(angle_degrees: float) -> float:
+    def calculate_turn_time(angle_degrees):
         """
         Calculate time needed to turn a given angle.
 

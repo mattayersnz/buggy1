@@ -6,14 +6,13 @@ position within a 1-meter square boundary.
 """
 
 import math
-from typing import Tuple, Optional
 from calibration_data import CalibrationData
 
 
 class Position:
     """Represents a 2D position with heading."""
 
-    def __init__(self, x: float, y: float, heading: float):
+    def __init__(self, x, y, heading):
         """
         Initialize position.
 
@@ -22,11 +21,11 @@ class Position:
             y: Y coordinate in meters (0.0 to 1.0)
             heading: Heading in degrees (0 = north/forward, clockwise)
         """
-        self.x: float = x
-        self.y: float = y
-        self.heading: float = heading % 360.0  # Normalize to 0-360
+        self.x = x
+        self.y = y
+        self.heading = heading % 360.0  # Normalize to 0-360
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return f"Position(x={self.x:.3f}m, y={self.y:.3f}m, heading={self.heading:.1f}°)"
 
 
@@ -45,10 +44,10 @@ class PositionTracker:
             CalibrationData.START_Y,
             CalibrationData.START_HEADING
         )
-        self.boundary_size: float = CalibrationData.BOUNDARY_SIZE
-        self.safety_margin: float = CalibrationData.SAFETY_MARGIN
+        self.boundary_size = CalibrationData.BOUNDARY_SIZE
+        self.safety_margin = CalibrationData.SAFETY_MARGIN
 
-    def update_position(self, distance_cm: float) -> None:
+    def update_position(self, distance_cm):
         """
         Update position after linear movement.
 
@@ -76,7 +75,7 @@ class PositionTracker:
         self.current_position.x = max(0.0, min(self.boundary_size, self.current_position.x))
         self.current_position.y = max(0.0, min(self.boundary_size, self.current_position.y))
 
-    def update_heading(self, angle_degrees: float) -> None:
+    def update_heading(self, angle_degrees):
         """
         Update heading after rotation.
 
@@ -85,7 +84,7 @@ class PositionTracker:
         """
         self.current_position.heading = (self.current_position.heading + angle_degrees) % 360.0
 
-    def is_movement_safe(self, distance_cm: float) -> bool:
+    def is_movement_safe(self, distance_cm):
         """
         Check if a forward movement would stay within boundaries.
 
@@ -109,7 +108,7 @@ class PositionTracker:
         return (min_safe <= predicted_x <= max_safe and
                 min_safe <= predicted_y <= max_safe)
 
-    def get_distance_to_boundary(self, heading_override: Optional[float] = None) -> float:
+    def get_distance_to_boundary(self, heading_override = None):
         """
         Calculate approximate distance to boundary in current heading direction.
 
@@ -159,7 +158,7 @@ class PositionTracker:
         else:
             return 100.0  # Large safe value if no boundary found
 
-    def get_safe_heading(self) -> float:
+    def get_safe_heading(self):
         """
         Calculate a safe heading that points away from boundaries.
 
@@ -183,7 +182,7 @@ class PositionTracker:
         heading_to_center = math.degrees(math.atan2(to_center_x, to_center_y))
         return heading_to_center % 360.0
 
-    def is_near_boundary(self, threshold_cm: float = 15.0) -> bool:
+    def is_near_boundary(self, threshold_cm=15.0):
         """
         Check if position is near any boundary.
 
@@ -200,7 +199,7 @@ class PositionTracker:
                 self.current_position.y < threshold_m or
                 self.current_position.y > (self.boundary_size - threshold_m))
 
-    def get_boundary_proximity(self) -> Tuple[str, float]:
+    def get_boundary_proximity(self):
         """
         Get which boundary is closest and how far away it is.
 
@@ -218,7 +217,7 @@ class PositionTracker:
         closest_boundary = min(distances.items(), key=lambda item: item[1])
         return closest_boundary[0], closest_boundary[1]
 
-    def reset_to_center(self) -> None:
+    def reset_to_center(self):
         """Reset position to center of boundary."""
         self.current_position = Position(
             self.boundary_size / 2.0,
@@ -226,7 +225,7 @@ class PositionTracker:
             self.current_position.heading  # Keep current heading
         )
 
-    def get_position_tuple(self) -> Tuple[float, float, float]:
+    def get_position_tuple(self):
         """
         Get current position as tuple.
 

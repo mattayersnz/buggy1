@@ -7,11 +7,9 @@ personality, movement patterns, and reactions to stimuli.
 
 import time
 import random
-from typing import Tuple, Dict, List
-from enum import Enum
 
 
-class Mood(Enum):
+class Mood:
     """Mood states for the creature."""
     CALM = "calm"
     CURIOUS = "curious"
@@ -24,12 +22,11 @@ class SoundPattern:
 
     def __init__(
         self,
-        base_frequency: int,
-        frequency_variation: int,
-        beep_count: int,
-        beep_duration: float,
-        beep_gap: float
-    ):
+        base_frequency,
+        frequency_variation,
+        beep_count,
+        beep_duration,
+        beep_gap):
         """
         Initialize sound pattern.
 
@@ -40,11 +37,11 @@ class SoundPattern:
             beep_duration: Duration of each beep in seconds
             beep_gap: Gap between beeps in seconds
         """
-        self.base_frequency: int = base_frequency
-        self.frequency_variation: int = frequency_variation
-        self.beep_count: int = beep_count
-        self.beep_duration: float = beep_duration
-        self.beep_gap: float = beep_gap
+        self.base_frequency = base_frequency
+        self.frequency_variation = frequency_variation
+        self.beep_count = beep_count
+        self.beep_duration = beep_duration
+        self.beep_gap = beep_gap
 
 
 class MoodConfig:
@@ -52,16 +49,15 @@ class MoodConfig:
 
     def __init__(
         self,
-        mood_type: Mood,
-        led_color: Tuple[int, int, int],
-        led_breathing: bool,
-        speed_range: Tuple[int, int],
-        turn_bias: float,
-        pause_frequency: float,
-        pause_duration: Tuple[float, float],
-        sound_pattern: SoundPattern,
-        investigation_distance: float
-    ):
+        mood_type,
+        led_color,
+        led_breathing,
+        speed_range,
+        turn_bias,
+        pause_frequency,
+        pause_duration,
+        sound_pattern,
+        investigation_distance):
         """
         Initialize mood configuration.
 
@@ -76,19 +72,19 @@ class MoodConfig:
             sound_pattern: Sound pattern for this mood
             investigation_distance: How close to approach objects (cm)
         """
-        self.mood_type: Mood = mood_type
-        self.led_color: Tuple[int, int, int] = led_color
-        self.led_breathing: bool = led_breathing
-        self.speed_range: Tuple[int, int] = speed_range
-        self.turn_bias: float = turn_bias
-        self.pause_frequency: float = pause_frequency
-        self.pause_duration: Tuple[float, float] = pause_duration
-        self.sound_pattern: SoundPattern = sound_pattern
-        self.investigation_distance: float = investigation_distance
+        self.mood_type = mood_type
+        self.led_color = led_color
+        self.led_breathing = led_breathing
+        self.speed_range = speed_range
+        self.turn_bias = turn_bias
+        self.pause_frequency = pause_frequency
+        self.pause_duration = pause_duration
+        self.sound_pattern = sound_pattern
+        self.investigation_distance = investigation_distance
 
 
 # Define mood configurations
-MOOD_CONFIGS: Dict[Mood, MoodConfig] = {
+MOOD_CONFIGS = {
     Mood.CALM: MoodConfig(
         mood_type=Mood.CALM,
         led_color=(0, 0, 255),  # Blue
@@ -145,7 +141,7 @@ class MoodManager:
     """
 
     # Transition probabilities: MOOD_TRANSITIONS[from_mood][to_mood] = probability
-    MOOD_TRANSITIONS: Dict[Mood, Dict[Mood, float]] = {
+    MOOD_TRANSITIONS = {
         Mood.CALM: {
             Mood.CALM: 0.40,
             Mood.CURIOUS: 0.30,
@@ -183,19 +179,19 @@ class MoodManager:
         Args:
             start_mood: Initial mood state
         """
-        self.current_mood: Mood = start_mood
-        self.mood_start_time: float = time.time()
-        self.mood_duration: float = random.uniform(
+        self.current_mood = start_mood
+        self.mood_start_time = time.time()
+        self.mood_duration = random.uniform(
             self.MOOD_DURATION_MIN,
             self.MOOD_DURATION_MAX
         )
-        self.event_counts: Dict[str, int] = {
+        self.event_counts = {
             "object_encounter": 0,
             "boundary_encounter": 0,
             "idle_time": 0
         }
 
-    def update(self) -> MoodConfig:
+    def update(self):
         """
         Update mood state and check for transitions.
 
@@ -211,7 +207,7 @@ class MoodManager:
 
         return MOOD_CONFIGS[self.current_mood]
 
-    def _transition_mood(self) -> None:
+    def _transition_mood(self):
         """Execute a mood transition based on probabilities."""
         # Get transition probabilities for current mood
         transitions = self.MOOD_TRANSITIONS[self.current_mood]
@@ -230,7 +226,7 @@ class MoodManager:
             self.MOOD_DURATION_MAX
         )
 
-    def log_event(self, event_type: str) -> None:
+    def log_event(self, event_type):
         """
         Log an event and potentially trigger mood change.
 
@@ -255,7 +251,7 @@ class MoodManager:
             else:
                 self._force_mood(Mood.CAUTIOUS)
 
-    def _force_mood(self, new_mood: Mood) -> None:
+    def _force_mood(self, new_mood):
         """
         Force a specific mood change.
 
@@ -270,7 +266,7 @@ class MoodManager:
                 self.MOOD_DURATION_MAX
             )
 
-    def get_current_config(self) -> MoodConfig:
+    def get_current_config(self):
         """
         Get current mood configuration.
 
@@ -279,7 +275,7 @@ class MoodManager:
         """
         return MOOD_CONFIGS[self.current_mood]
 
-    def should_pause(self) -> bool:
+    def should_pause(self):
         """
         Check if creature should pause based on current mood.
 
@@ -295,7 +291,7 @@ class MoodManager:
 
         return random.random() < pause_probability
 
-    def get_pause_duration(self) -> float:
+    def get_pause_duration(self):
         """
         Get random pause duration for current mood.
 
@@ -305,7 +301,7 @@ class MoodManager:
         config = MOOD_CONFIGS[self.current_mood]
         return random.uniform(*config.pause_duration)
 
-    def get_random_speed(self) -> int:
+    def get_random_speed(self):
         """
         Get random speed within current mood's range.
 
